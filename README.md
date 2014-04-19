@@ -1,0 +1,6 @@
+# goatdb
+
+
+## License
+
+MIT
