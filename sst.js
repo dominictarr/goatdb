@@ -23,7 +23,7 @@ function search (ary, target, _compare) {
   return lo
 }
 
-function sst (ary) {
+function sst (ary, location) {
   if(!Array.isArray(ary)) {
     var obj = ary
     ary = []
@@ -38,6 +38,7 @@ function sst (ary) {
     size: ary.length,
     type: 'sst',
     store: ary,
+    location: location,
     get: function (key, cb) {
       var i = search(ary, {key: key}, compareKeys)
       console.log(ary)
@@ -61,10 +62,10 @@ function sst (ary) {
   }
 }
 
-exports = module.exports = function (cb) {
+exports = module.exports = function (location, cb) {
   return pull.collect(function (err, ary) {
     if(err) cb(err)
-    else cb(null, sst(ary))
+    else cb(null, sst(ary, location))
   })
 }
 
