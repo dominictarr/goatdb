@@ -1,10 +1,21 @@
 var compact = require('./compact')
 var createSST = require('./sst')
 var mem = require('./mem')
+var mkdirp = require('mkdirp')
+var path = require('path')
+
 var zeros = '00000000'
+
 function pad (n) {
   n = n.toString()
   return zeros.substring(0, n.length) + n
+}
+
+function isEmpty (o) {
+  if(null == o) return true
+  for(var k in o)
+    return false
+  return true
 }
 
 module.exports = function (createSST, createMemtable, createManifest) {
@@ -13,6 +24,10 @@ module.exports = function (createSST, createMemtable, createManifest) {
     var memtable = mem(), counter = 0, db, compacting = false, _snapshot
     var tables = tables || [memtable]
     var manifest, tables, seq
+
+    function nextTableName(type) {
+      return type + '-' + pad(seq++) + '.json'
+    }
     return db = {
       //should i separate all this stuff out so that
       //you can simulate the database all in memory?
@@ -20,32 +35,38 @@ module.exports = function (createSST, createMemtable, createManifest) {
         if(!cb) cb = opts, opts = {}
         mkdirp(location, function (err) {
           if(err) return cb(err)
-          manifest = creatManifest(path.join(location, 'manifest.json'))
+          manifest = createManifest(path.join(location, 'manifest.json'))
           manifest.open(function (err) {
             if(err) return cb(err)
+            console.log('open')
             //if the manifest is empty create an empty memory table.
-            if(!manifest.data) {
+            if(isEmpty(manifest.data)) {
               seq = 0
-              var filename = 
-              var _memtable = createMemtable(path.join(location, 'log-'+pad(seq)+'.json'))
+              var filename = path.join(location, 'log-'+pad(seq)+'.json')
+              var _memtable = createMemtable(filename)
               manifest.update({tables: ['log-'+pad(seq)+'.json'], seq: seq}, function (err) {
                 if(err) return cb(err)
+                console.log('updated')
                 _memtable.open(function (err) {
+                  console.log('memtable open')
                   if(err) cb(err)
                   memtable = _memtable
                   _snapshot = [memtable]
-                  cb(null, db)
+                  console.log(_snapshot)
+                cb(null, db)
                 })
               })
             } else {
               //open all the tables.
-              var _tables = []
-              var n = manifest.tables.length
-              manifest.tables.forEach(function (name, i) {
+              var _tables = manifest.data.tables || []
+              var n = tables.length
+              _tables.forEach(function (name, i) {
+                console.log(name, i)
                 var m = /^(log|sst)-(\d+)\.json$/.exec(name)
                 var type = m[1], _seq = m[2], table
                 var create = type == 'log' ? createMemtable : createSST
                 var table = tables[i] = create(name)
+                console.log('table', i, type, name)
                 table.open(next)
               })
               function next (err) {
@@ -55,9 +76,13 @@ module.exports = function (createSST, createMemtable, createManifest) {
               }
             }
           })
-        }
+        })
       },
     //get the current snapshot.
+      nextSnapshot: function (ary) {
+        _snapshot = ary
+        return db
+      },
       snapshot: function () {
         if(_snapshot) {
           tables = _snapshot; _snapshot = null
@@ -112,6 +137,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
         //so that doesn't need to be tracked specially.
 
         var tables = db.snapshot()
+
         var stream = tables[0].createReadStream(opts)
         for(var i = 1; i < tables.length; i++)
           stream = merge(tables[i].createReadStream(opts), stream)
@@ -130,31 +156,40 @@ module.exports = function (createSST, createMemtable, createManifest) {
 //        manifest.put('tables', 
 
         //add a new memtable to the manifest
-        var name = nextTamleName('log')
+        var name = nextTableName('log')
         var tables = db.snapshot()
+
         var names = tables.map(function (e) {
           return path.basename(e.location)
+
         })
         names.unshift(name)
         manifest.update({tables: names, seq: seq}, function (err) {
 
-          _snapshot = [memtable].concat(tables)
-          var table = createMemtable(path.join(location, name).open(function ()
-
-          console.log('COMPACTING...')
-          memtable =  mem(nextTableName('log'))
-          compact(tables, createSST, function (err, sst, tables) {
-          console.log('COMPACTING...DONE')
-            compacting = false
-            //now that we have generated the sst,
-            //save the new table set in the manifest,
-            //so that if the process crashes we will reload the right data.
-            //hmm, maybe we could just start using it... sst table are immutable, anyway.
-            //the most important thing to have right is the memtables.
-            //when an sst is no longer used (been compacted + no more iterators)
-            //then it's safe to delete.
-            _snapshot = [memtable, sst].concat(tables)
-            if(cb) cb()
+          var _memtable = createMemtable(path.join(location, name))
+          _memtable.open(function (err) {
+            if(err) return cb(err)
+            memtable = _memtable
+            db.nextSnapshot([memtable].concat(tables))
+            console.log('COMPACTING...')
+  
+            //maybe the api for sst should have a write stream,
+            //except it errors unles it's all in order,
+            //and you can only use it once?
+            tables = compact(tables, createSST(location, function (err, sst) {
+              if(err) return cb(err)
+              console.log('COMPACTING...DONE')
+              compacting = false
+              //now that we have generated the sst,
+              //save the new table set in the manifest,
+              //so that if the process crashes we will reload the right data.
+              //hmm, maybe we could just start using it... sst table are immutable, anyway.
+              //the most important thing to have right is the memtables.
+              //when an sst is no longer used (been compacted + no more iterators)
+              //then it's safe to delete.
+              db.nextSnapshot([memtable, sst].concat(tables))
+              if(cb) cb()
+            }))
           })
         })
       }
