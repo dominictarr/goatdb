@@ -70,3 +70,4 @@ exports = module.exports = function (cb) {
 
 exports.compare = compare
 exports.search = search
+exports.sst = sst
