@@ -1,5 +1,5 @@
-var sst = require('../sst')
-var pull = require('../pull')
+var sst = require('../sst').sst
+var pull = require('pull-stream')
 var tape = require('tape')
 
 var db = sst({
