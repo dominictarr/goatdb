@@ -2,7 +2,7 @@ var pull = require('pull-stream')
 
 var next = setImmediate || process.nextTick
 
-module.exports = function () {
+module.exports = function (location) {
   var store = {}
   var keys = []
   var db
@@ -11,6 +11,11 @@ module.exports = function () {
     level: 1,
     type: 'mem',
     store: store,
+    location: location,
+    open: function (opts, cb) {
+      if(!cb) cb = opts, opts = {}
+      cb()
+    },
     get: function (key, cb) {
       if(!store[key]) return cb(new Error('not found'))
       next(function () {cb(null, store[key])})
