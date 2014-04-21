@@ -37,8 +37,7 @@ tape('sizes are correct', function (t) {
         t.equal(sst.size, 200, 'sst size')
 
         t.end()
-      })
+      }))
     })
   })
-
 })
