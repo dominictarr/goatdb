@@ -1,7 +1,7 @@
 var pull = require('pull-stream')
 var para = require('pull-paramap')
-var mem = require('../mem')
-var createSST = require('../sst')
+var mem = require('./mocks/mem')
+var createSST = require('./mocks/sst')
 var compact = require('../compact')
 var tape = require('tape')
 function generate(db, n, cb) {
@@ -29,7 +29,7 @@ tape('sizes are correct', function (t) {
     console.log('compact1')
     generate(db2, 100, function () {
 
-      compact([db1, db2], createSST, function (err, sst) {
+      compact([db1, db2], createSST('fake-location', function (err, sst) {
   //      var db3 = mem()
 
         console.log(sst)
@@ -37,13 +37,6 @@ tape('sizes are correct', function (t) {
         t.equal(sst.size, 200, 'sst size')
 
         t.end()
-  //      generate(db3, 100, function () {
-  //        compact([db3, sst[0]], createSST, function (err, sst2) {
-  //
-  //          console.log('compact2')
-  //          console.log(sst2)
-  //        })
-  //      })
       })
     })
   })

@@ -1,6 +1,6 @@
 {
   "name": "goatdb",
-  "description": "",
+  "description": "log structured merge tree in pure js, for goatscale",
   "version": "0.0.0",
   "homepage": "https://github.com/dominictarr/goatdb",
   "repository": {
@@ -8,12 +8,21 @@
     "url": "git://github.com/dominictarr/goatdb.git"
   },
   "dependencies": {
+    "mkdirp": "~0.3.5",
+    "pull-stream": "~2.22.0",
+    "json-logdb": "~2.0.1",
+    "json-sst": "~1.0.0",
+    "kiddb": "~0.0.1"
   },
   "devDependencies": {
+    "rimraf": "~2.2.6",
+    "pull-paramap": "~1.0.5",
+    "tape": "~2.12.3",
+    "osenv": "~0.0.3"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
   "author": "'Dominic Tarr' <dominic.tarr@gmail.com> (http://dominictarr.com)",
-  "license": "MIT"  
+  "license": "MIT"
 }

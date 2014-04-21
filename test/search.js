@@ -1,4 +1,4 @@
-var search = require('../sst').search
+var search = require('./mocks/sst').search
 var tape = require('tape')
 
 var ary = [

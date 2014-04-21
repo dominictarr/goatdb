@@ -1,4 +1,5 @@
-var sst = require('../sst').sst
+var sst = require('./mocks/sst').sst
+
 var pull = require('pull-stream')
 var tape = require('tape')
 
