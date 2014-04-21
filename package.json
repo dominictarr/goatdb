@@ -1,7 +1,7 @@
 {
   "name": "goatdb",
   "description": "log structured merge tree in pure js, for goatscale",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/dominictarr/goatdb",
   "repository": {
     "type": "git",
