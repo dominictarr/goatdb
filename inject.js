@@ -124,6 +124,18 @@ module.exports = function (createSST, createMemtable, createManifest) {
           cb(err)
         })
       },
+      del: function (del, cb) {
+        return memtable.del(key, function (err) {
+          if(!(++counter % 1000)) db.compact()
+          cb(err)
+        })
+      },
+      batch: function (ops, cb) {
+        return memtable.batch(ops, function (err) {
+          if(!(++counter % 1000)) db.compact()
+          cb(err)
+        })
+      },
       createReadStream: function (opts) {
         //merge streams from all the tables
         //it's probably okay to not have a snapshot on the memtable.
