@@ -8,7 +8,7 @@ var zeros = '00000000'
 
 function pad (n) {
   n = n.toString()
-  return zeros.substring(0, n.length) + n
+  return zeros.substring(n.length) + n
 }
 
 function isEmpty (o) {
@@ -43,6 +43,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
             if(isEmpty(manifest.data)) {
               seq = 0
               var filename = path.join(location, 'log-'+pad(seq)+'.json')
+              console.error('filename', filename)
               var _memtable = createMemtable(filename)
               manifest.update({tables: ['log-'+pad(seq)+'.json'], seq: seq}, function (err) {
                 if(err) return cb(err)
@@ -52,7 +53,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
                   if(err) cb(err)
                   memtable = _memtable
                   _snapshot = [memtable]
-                  console.log(_snapshot)
+                  console.log('OPEN')
                 cb(null, db)
                 })
               })
@@ -60,18 +61,25 @@ module.exports = function (createSST, createMemtable, createManifest) {
               //open all the tables.
               var _tables = manifest.data.tables || []
               var n = tables.length
+              console.log('tables', _tables)
+              var _seq = 0
               _tables.forEach(function (name, i) {
                 console.log(name, i)
                 var m = /^(log|sst)-(\d+)\.json$/.exec(name)
-                var type = m[1], _seq = m[2], table
+                var type = m[1], table
+                _seq = Math.max(m[2], _seq)
                 var create = type == 'log' ? createMemtable : createSST
-                var table = tables[i] = create(name)
+                var table = tables[i] = create(path.join(location, name))
                 console.log('table', i, type, name)
                 table.open(next)
               })
               function next (err) {
                 if(err) return n = -1, cb(err)
+                console.log('opening', n)
                 if(--n) return
+                seq = _seq + 1
+                db.nextSnapshot(tables)
+                memtable = tables[0]
                 cb(null, db)
               }
             }
@@ -113,7 +121,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
       },
       //only write to the FIRST table.
       put: function (key, value, cb) {
-        if(Math.random() < 0.1) console.log(counter)
+        console.log('PUT', key, value)
         return memtable.put(key, value, function (err) {
           if(!(++counter % 200))
             db.compact()
@@ -159,11 +167,16 @@ module.exports = function (createSST, createMemtable, createManifest) {
         var name = nextTableName('log')
         var tables = db.snapshot()
 
-        var names = tables.map(function (e) {
-          return path.basename(e.location)
+        function getNames (tables) {
+          return tables.map(function (e) {
+              if(!e.location) throw new Error(e.type + 'table is missing location')
+              return path.basename(e.location)
+            })
+        }
 
-        })
+        var names = getNames(tables)
         names.unshift(name)
+
         manifest.update({tables: names, seq: seq}, function (err) {
 
           var _memtable = createMemtable(path.join(location, name))
@@ -172,11 +185,11 @@ module.exports = function (createSST, createMemtable, createManifest) {
             memtable = _memtable
             db.nextSnapshot([memtable].concat(tables))
             console.log('COMPACTING...')
-  
+
             //maybe the api for sst should have a write stream,
             //except it errors unles it's all in order,
             //and you can only use it once?
-            tables = compact(tables, createSST(location, function (err, sst) {
+            tables = compact(tables, createSST.createStream(path.join(location, nextTableName('sst')), function (err, sst) {
               if(err) return cb(err)
               console.log('COMPACTING...DONE')
               compacting = false
@@ -187,8 +200,12 @@ module.exports = function (createSST, createMemtable, createManifest) {
               //the most important thing to have right is the memtables.
               //when an sst is no longer used (been compacted + no more iterators)
               //then it's safe to delete.
-              db.nextSnapshot([memtable, sst].concat(tables))
-              if(cb) cb()
+              var _tables = [memtable, sst].concat(tables)
+              manifest.update({tables: getNames(_tables), seq: seq}, function (err) {
+                if(err) return cb(err)
+                db.nextSnapshot(_tables)
+                if(cb) cb()
+              })
             }))
           })
         })
