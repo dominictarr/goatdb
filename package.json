@@ -10,8 +10,8 @@
   "dependencies": {
     "mkdirp": "~0.3.5",
     "pull-stream": "~2.22.0",
-    "json-logdb": "~2.0.0",
-    "json-sst": "~0.1.1",
+    "json-logdb": "~2.0.1",
+    "json-sst": "~1.0.0",
     "kiddb": "~0.0.1"
   },
   "devDependencies": {
