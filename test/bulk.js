@@ -6,7 +6,6 @@ var tmpdir = osenv.tmpdir()
 var pull   = require('pull-stream')
 var tape   = require('tape')
 var rimraf = require('rimraf')
-var cat    = require('pull-cat')
 
 var crypto = require('crypto')
 
