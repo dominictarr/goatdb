@@ -3,7 +3,7 @@ var createSST = require('./sst')
 var mem = require('./mem')
 var mkdirp = require('mkdirp')
 var path = require('path')
-
+var merge = require('pull-merge')
 var zeros = '00000000'
 
 function pad (n) {
