@@ -23,5 +23,5 @@ var createManifest = function (location) {
   }
 }
 
-module.exports = inject(createSST, createMemtable, createManifest)
+module.exports = inject({createStream: createSST}, createMemtable, createManifest)
 
