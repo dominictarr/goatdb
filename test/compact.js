@@ -1,7 +1,7 @@
 var pull = require('pull-stream')
 var para = require('pull-paramap')
-var mem = require('../mem')
-var createSST = require('../sst')
+var mem = require('./mocks/mem')
+var createSST = require('./mocks/sst')
 var compact = require('../compact')
 var tape = require('tape')
 function generate(db, n, cb) {

@@ -1,6 +1,6 @@
 
 var tape = require('tape')
-var db = require('../memory')('test')
+var db = require('./mocks/memory')('test')
 var pull = require('pull-stream')
 
 db.open(function (err) {

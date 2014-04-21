@@ -1,6 +1,6 @@
 
 
-var inject = require('./inject')
+var inject = require('../../inject')
 var createSST = require('./sst')
 var createMemtable = require('./mem')
 

@@ -12,7 +12,6 @@ function search (ary, target, _compare) {
   var comp = _compare || compare, lo = 0, hi = ary.length
   var m = 0
   while(hi > lo + 1) {
-    console.log(lo, m, hi)
     m = ~~((hi + lo) / 2)
     switch(comp(target, ary[m])) {
       case  0: return m;
@@ -41,7 +40,6 @@ function sst (ary, location) {
     location: location,
     get: function (key, cb) {
       var i = search(ary, {key: key}, compareKeys)
-      console.log(ary)
       console.log('GET', i, key, ary[i])
       if(i > ary.length || ary[i].key !== key)
         cb(new Error('not found'))

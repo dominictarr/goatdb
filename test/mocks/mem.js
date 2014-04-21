@@ -6,6 +6,7 @@ module.exports = function (location) {
   var store = {}
   var keys = []
   var db
+  var frozen = false
   return db = {
     size: 0,
     level: 1,
@@ -21,6 +22,7 @@ module.exports = function (location) {
       next(function () {cb(null, store[key])})
     },
     put: function (key, value, cb) {
+      if(frozen) return cb(new Error('FROZEN'))
       store[key] = value
       keys.push(key)
       keys.sort()
@@ -35,6 +37,10 @@ module.exports = function (location) {
 //      delete store[key]
 //      cb()
 //    },
+    freeze: function (cb) {
+      frozen = true
+      cb()
+    },
     createReadStream: function (opts) {
       var gt = opts && opts.gt
       return pull.values(keys.filter(function (e) {
