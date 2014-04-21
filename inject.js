@@ -80,6 +80,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
             }
           })
         })
+        return db
       },
     //get the current snapshot.
       nextSnapshot: function (ary) {
@@ -113,6 +114,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
             return cb(null, value)
           })
         })(0)
+        return db
       },
       //only write to the FIRST table.
       put: function (key, value, cb) {
