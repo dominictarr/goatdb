@@ -70,7 +70,7 @@ tape('simple', function (t) {
       console.log('opened')
       var key = 'foo'
       var value = new Date().toISOString()
-      input[key] = {key: key, value: value}
+      input[key] = value
       db.put(key, value, function (err) {
         if(err) throw err
         db.get(key, function (err, value) {
@@ -100,32 +100,6 @@ tape('bulkload', function (t) {
     pull.drain(null, function (err) {
       if(err) throw err
 
-//      bulk(db, function (err, obj, objs) {
-//        for(var k in input) {
-//          var missing
-//          for(var j in objs)
-//            if(!objs[j][k])
-//              missing = j
-//            else {
-//              missing = null
-//              break
-//            }
-//          if(missing) {
-//            console.log(k, 'is missing from', missing)
-//            t.fail(k + ' is missing from ' + missing)
-//          }
-//        }
-//        t.equal(
-//          Object.keys(obj).length,
-//          Object.keys(input).length
-//        )
-//        t.end()
-//      })
-
-      console.log(
-        db.snapshot().map(function (e) { return e.location })
-      )
-
       pull(
         db.createReadStream(),
         pull.collect(function (err, actual) {
@@ -137,19 +111,32 @@ tape('bulkload', function (t) {
           var expected = Object.keys(input).sort().map(function (key) {
             return input[key]
           })
-          console.log(Object.keys(output).length, Object.keys(input).length)
           t.equal(Object.keys(output).length, Object.keys(input).length, 'keys length')
           t.equal(actual.length, expected.length)
-//          expected.forEach(function (data) {
-//            if(!input[data.key])
-//              console.log('MISSING', data)
-//          })
           t.end()
         })
       )
 
-
     })
   )
+})
 
+tape('get everything', function (t) {
+  var n = 0
+  for(var k in input) {
+    ;(function (key) {
+      if(n > 500) return
+      ++n
+      db.get(key, function (err, value) {
+        if(err) throw err
+        t.deepEqual(value, input[key], 'get(' + key + ')')
+        next()
+      })
+    }(k))
+  }
+
+  function next (err) {
+    if(--n) return
+    t.end()
+  }
 })
