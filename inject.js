@@ -1,7 +1,10 @@
 var compact = require('./compact')
+var createSST = require('./sst')
+var mem = require('./mem')
 var mkdirp = require('mkdirp')
 var path = require('path')
 var merge = require('pull-merge')
+var u = require('./util')
 var zeros = '00000000'
 
 function pad (n) {
@@ -16,14 +19,10 @@ function isEmpty (o) {
   return true
 }
 
-function compare (a, b) {
-  return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
-}
-
 module.exports = function (createSST, createMemtable, createManifest) {
 
   return function (location, opts) {
-    var memtable, counter = 0, db, compacting = false, _snapshot
+    var memtable = mem(), counter = 0, db, compacting = false, _snapshot
     var tables = tables || [memtable]
     var manifest, tables, seq
 
@@ -110,7 +109,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
 
           if(!tables[i]) return cb(new Error('not found'))
           tables[i].get(key, function (err, value) {
-            if(err) return next(i)
+            if(err) return next(i + 1)
             return cb(null, value)
           })
         })(0)
@@ -148,7 +147,7 @@ module.exports = function (createSST, createMemtable, createManifest) {
         console.log('start', tables[0].location)
         for(var i = 1; i < tables.length; i++) {
           console.log('merge', tables[i].location)
-          stream = merge(tables[i].createReadStream(opts), stream, compare)
+          stream = merge(tables[i].createReadStream(opts), stream, u.compare)
         }
         return stream
       },
