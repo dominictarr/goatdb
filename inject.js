@@ -7,6 +7,9 @@ var merge = require('pull-merge')
 var u = require('./util')
 var zeros = '00000000'
 
+var pull = require('pull-stream')
+var para = require('pull-paramap')
+
 function pad (n) {
   n = n.toString()
   return zeros.substring(n.length) + n
@@ -165,6 +168,16 @@ module.exports = function (createSST, createMemtable, createManifest) {
         }
         return stream
       },
+      close: function (cb) {
+        pull(
+          pull.values(db.snapshot()),
+          para(function (db) {
+            db.close(cb)
+          }),
+          pull.drain(cb)
+        )
+      },
+
       compact: function (cb) {
         cb = cb || function () {}
         //make a temp snapshot for use while compacting.
