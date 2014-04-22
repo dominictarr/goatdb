@@ -13,7 +13,8 @@
     "json-logdb": "~2.1.0",
     "json-sst": "~1.0.2",
     "kiddb": "~0.0.2",
-    "pull-merge": "~0.0.2"
+    "pull-merge": "~0.0.2",
+    "pull-paramap": "~1.0.5"
   },
   "devDependencies": {
     "rimraf": "~2.2.6",
