@@ -2,6 +2,8 @@
 
 a log-structured-merge-tree, implemented in pure node.js. GOATSCALE!!!
 
+> dedicated to [@luk](https://twitter.com/luk)
+
 ![img](http://i.imgur.com/7Na4XmH.gif)
 
 Another goatscale db [locket](https://github.com/bigeasy/locket)
