@@ -6,6 +6,8 @@ a log-structured-merge-tree, implemented in pure node.js. GOATSCALE!!!
 
 ![img](http://i.imgur.com/7Na4XmH.gif)
 
+[BUT DOES IT SCALE?](http://a-big-goat.herokuapp.com/)
+
 Another goatscale db [locket](https://github.com/bigeasy/locket)
 
 ``` js
